@@ -14,24 +14,24 @@ import "github.com/aurowora/sparki"
 
 func main() {
     // Create a PushClient
-	pushClient := sparki.NewPushClient("https://loki.example.com/loki/api/v1/push")
-	defer pushClient.Close() // Closing the push client will flush all logs
-	
-	// Open a stream
-	streamClient := pushClient.NewStream([]sparki.Label{{Name: "source", Value: "sparki"}})
-	// defer streamClient.Close() is redundant because pushClient.Close will close all streams
-	
-	// Create a core for use with Zap, create a zap logger, and attach the core
-	sparkiCore := sparki.NewCore(streamClient)
-	logger := zap.NewExample()
-	defer logger.Sync()
-	logger = logger.WithOptions(zap.WrapCore(func (core zapcore.Core) zapcore.Core {
-		return zapcore.NewTee(core, sparkiCore)
+    pushClient := sparki.NewPushClient("https://loki.example.com/loki/api/v1/push")
+    defer pushClient.Close() // Closing the push client will flush all logs
+    
+    // Open a stream
+    streamClient := pushClient.NewStream([]sparki.Label{{Name: "source", Value: "sparki"}})
+    // defer streamClient.Close() is redundant because pushClient.Close will close all streams
+    
+    // Create a core for use with Zap, create a zap logger, and attach the core
+    sparkiCore := sparki.NewCore(streamClient)
+    logger := zap.NewExample()
+    defer logger.Sync()
+    logger = logger.WithOptions(zap.WrapCore(func (core zapcore.Core) zapcore.Core {
+        return zapcore.NewTee(core, sparkiCore)
     }))
-	
-	// Log some messages
-	logger.Info("Hello, world! ⚡")
-	logger.Error("Crashing and burning 🔥", zap.String("scream", "aaaah!"))
+    
+    // Log some messages
+    logger.Info("Hello, world! ⚡")
+    logger.Error("Crashing and burning 🔥", zap.String("scream", "aaaah!"))
 }
 ```
 
@@ -44,10 +44,10 @@ import "time"
 import "github.com/aurowora/sparki"
 
 func main() {
-	pushClient := sparki.NewPushClient("https://loki.example.com/loki/api/v1/push")
-	defer pushClient.Close()
-
-	streamClient := pushClient.NewStream([]sparki.Label{{Name: "source", Value: "sparki"}})
+    pushClient := sparki.NewPushClient("https://loki.example.com/loki/api/v1/push")
+    defer pushClient.Close()
+    
+    streamClient := pushClient.NewStream([]sparki.Label{{Name: "source", Value: "sparki"}})
     streamClient.Log(time.Now(), "This will be sent to Loki.")
 }
 ```
