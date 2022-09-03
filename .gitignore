@@ -1,0 +1,3 @@
+# don't include vendor dir, it's really only for building protobufs
+vendor
+.devconf
