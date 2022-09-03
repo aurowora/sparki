@@ -62,10 +62,61 @@ beginning with `WithClient`. The following options are available:
 
 - WithClientMaxPayloadLength(int) - Specifies the maximum number of logs to store in memory (per stream) before the logs must be sent to Loki. Defaults to 8192.
 - WithClientMaxPayloadAge(time.Duration) - Specifies the maximum amount of time that a log can remain in memory before it must be sent to Loki. Defaults to 5 minutes.
-- WithClientHeader(http.Header) - Specifies any additional headers to be sent to Loki. Can be used to add headers for authentication.
+- WithClientHeaders(http.Header) - Specifies any additional headers to be sent to Loki. Can be used to add headers for authentication.
 - WithClientTransport(http.RoundTripper) - Specifies the Transport that should be used for the HTTP client.
 - WithClientRetryLimit(int) - Specifies how many times PushClient is allowed to retry failures when sending logs. By default, Sparki may retry up to 7 times before the logs are lost for good.
 - WithClientPushWorkers(int) - Specifies how many go routines are created to send HTTP requests to Loki. By default, 6 workers are used.
+
+#### Authentication
+
+It is common for Loki to reside behind a reverse proxy that requires authentication of some sort.
+
+An example of using `WithClientHeaders` to authenticate with a reverse proxy that uses a header-based auth scheme:
+
+```go
+package main
+
+import "net/http"
+import "github.com/aurowora/sparki"
+
+func main() {
+    extraHeaders := make(http.Header, 1)
+    extraHeaders.Set("Authorization", "Basic YWxhZGRpbjpvcGVuc2VzYW1l")
+    
+    pushClient := sparki.NewPushClient("https://loki.example.com/loki/api/v1/push", sparki.WithClientHeaders(extraHeaders))
+    defer pushClient.Close()
+    
+    // other setup code...
+}
+```
+
+An example of using `WithClientTransport` to authenticate with a reverse proxy that uses an mTLS-based auth scheme:
+
+```go
+package main
+
+import "crypto/tls"
+import "net/http"
+import "github.com/aurowora/sparki"
+
+func main() {
+    cert, err := tls.LoadX509KeyPair("./client.pem", "./client.key")
+    if err != nil {
+        panic(err)
+    }
+    
+    transport := http.Transport{
+        TLSClientConfig: &tls.Config{
+            Certificates: []tls.Certificate{cert},
+        },
+    }
+    
+    pushClient := sparki.NewPushClient("https://loki.example.com/loki/api/v1/push", sparki.WithClientTransport(transport))
+    defer pushClient.Close()
+    
+    // other setup code...
+}
+```
 
 ### StreamOption
 
